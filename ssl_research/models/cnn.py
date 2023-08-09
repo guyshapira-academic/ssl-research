@@ -91,3 +91,66 @@ class ConvBlock(nn.Module):
         out = self.relu2(out)
 
         return out
+
+
+class CNN(nn.Module):
+    """Full CNN model.
+
+    Parameters:
+        width (tuple): Number of channels for each spatial resolution.
+        depth (tuple): Number of convolutional blocks per spatial resolution.
+        skip_connections (bool): Whether to add residual connections.
+            Default: False.
+    """
+
+    def __init__(
+        self,
+        width: tuple = (16, 32, 64, 128),
+        depth: tuple = (2, 2, 2, 2),
+        output_dim: int = 256,
+        skip_connections: bool = False,
+    ):
+        super().__init__()
+
+        self.conv_in = nn.Conv2d(
+            in_channels=3, out_channels=width[0], kernel_size=3, stride=1, padding=1
+        )
+
+        self.levels = nn.ModuleList()
+        for i in range(len(width)):
+            level = nn.Sequential()
+            for j in range(depth[i]):
+                if j == 0 and i != 0:
+                    level.append(
+                        ConvBlock(
+                            width[i - 1],
+                            width[i],
+                            skip_connection=skip_connections,
+                            stride=2,
+                        )
+                    )
+                else:
+                    level.append(
+                        ConvBlock(
+                            width[i],
+                            width[i],
+                            skip_connection=skip_connections,
+                            stride=1,
+                        )
+                    )
+            self.levels.append(level)
+
+        self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(width[-1], output_dim)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out = self.conv_in(x)
+
+        for level in self.levels:
+            out = level(out)
+
+        out = self.global_pool(out)
+        out = out.view(out.shape[0], -1)
+        out = self.fc(out)
+
+        return out

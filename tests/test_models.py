@@ -20,3 +20,23 @@ def test_conv_block(
     y = conv_block(x)
 
     assert y.shape == (7, out_channels, 96 // stride, 96 // stride)
+
+
+@pytest.mark.parametrize("width", [(16, 32, 64, 128)])
+@pytest.mark.parametrize("depth", [(2, 2, 2, 2)])
+@pytest.mark.parametrize("skip_connections", [False, True])
+@pytest.mark.parametrize("output_dim", [128, 256])
+def test_cnn(
+    width: tuple, depth: tuple, skip_connections: bool, output_dim: int
+) -> None:
+    cnn_model = cnn.CNN(
+        width=width,
+        depth=depth,
+        skip_connections=skip_connections,
+        output_dim=output_dim,
+    )
+
+    x = torch.rand(7, 3, 96, 96)
+    y = cnn_model(x)
+
+    assert y.shape == (7, output_dim)
