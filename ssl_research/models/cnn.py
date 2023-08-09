@@ -154,3 +154,31 @@ class CNN(nn.Module):
         out = self.fc(out)
 
         return out
+
+
+def resnet20(output_dim: int) -> CNN:
+    """ResNet-20 model.
+
+    Parameters:
+        output_dim (int): Dimension of the output vector.
+    """
+    return CNN(
+        width=(16, 32, 64),
+        depth=(3, 3, 3),
+        output_dim=output_dim,
+        skip_connections=True,
+    )
+
+
+def vanilla20(output_dim: int) -> CNN:
+    """ResNet-20 model.
+
+    Parameters:
+        output_dim (int): Dimension of the output vector.
+    """
+    return CNN(
+        width=(16, 32, 64),
+        depth=(2, 2, 2),
+        output_dim=output_dim,
+        skip_connections=False,
+    )
