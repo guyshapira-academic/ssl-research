@@ -112,6 +112,8 @@ class CNN(nn.Module):
     ):
         super().__init__()
 
+        self.output_dim = output_dim
+
         self.conv_in = nn.Conv2d(
             in_channels=3, out_channels=width[0], kernel_size=3, stride=1, padding=1
         )
