@@ -79,8 +79,7 @@ class VICReg(L.LightningModule):
         std_coef: float = 25.0,
         cov_coef: float = 1.0,
         lr: float = 1e-3,
-        weight_decay: float = 1e-4,
-        num_epochs: int = 100,
+        weight_decay: float = 1e-6,
         batch_size: int = 256,
         num_workers: int = 4,
         **kwargs
@@ -105,7 +104,6 @@ class VICReg(L.LightningModule):
         self.cov_coef = cov_coef
         self.lr = lr
         self.weight_decay = weight_decay
-        self.num_epochs = num_epochs
         self.batch_size = batch_size
         self.num_workers = num_workers
 
