@@ -75,8 +75,8 @@ class VICReg(L.LightningModule):
         self,
         model: CNN,
         projector_features: int = 128,
-        sim_coef: float = 1.0,
-        std_coef: float = 1.0,
+        sim_coef: float = 25.0,
+        std_coef: float = 25.0,
         cov_coef: float = 1.0,
         lr: float = 1e-3,
         weight_decay: float = 1e-4,
@@ -184,8 +184,8 @@ class VICReg(L.LightningModule):
 def vicreg_loss(
     y_a: Tensor,
     y_b: Tensor,
-    sim_coef: float = 1.0,
-    std_coef: float = 1.0,
+    sim_coef: float = 25.0,
+    std_coef: float = 25.0,
     cov_coef: float = 1.0,
 ) -> Tensor:
     """VICReg loss function.
