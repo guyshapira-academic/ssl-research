@@ -2,10 +2,51 @@
 """
 from typing import Optional, Union
 
+import lightning as L
 import sklearn.metrics as metrics
 import sklearn.neighbors as neighbors
+import torch
 from numpy.typing import NDArray
 from torch import Tensor
+from torch.utils.data import DataLoader
+
+
+class NCCAccuracyCallback(L.Callback):
+    """
+    This callback calculates the NCC accuracy score for a model at each validation
+    epoch, using the validation data.
+    """
+
+    def __init__(self, loader: DataLoader):
+        super().__init__()
+
+        self.loader = loader
+
+    def on_validation_epoch_end(self, trainer: L.Trainer, pl_module: L.LightningModule):
+        """
+        Calculates the NCC accuracy score for the model at the end of each validation
+        epoch.
+
+        Parameters:
+            trainer (Trainer): The trainer object
+            pl_module (LightningModule): The module being trained
+        """
+        # Forward pass through the model
+        pl_module.eval()
+        with torch.no_grad():
+            X, y = [], []
+            for batch in self.loader:
+                x_batch, y_batch = batch
+                batch_size = x_batch.shape[0]
+                x_batch = x_batch.to(pl_module.device)
+                y.append(y_batch)
+                X.append(pl_module(x_batch).cpu().reshape(batch_size, -1))
+            X = torch.cat(X)
+            y = torch.cat(y)
+
+        # Calculate the NCC accuracy score
+        score = ncc_accuracy(X, y)
+        trainer.logger.log_metrics({"ncc_accuracy": score})
 
 
 def ncc_accuracy(

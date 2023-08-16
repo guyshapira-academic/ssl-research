@@ -82,6 +82,7 @@ class VICReg(L.LightningModule):
         weight_decay: float = 1e-6,
         batch_size: int = 256,
         num_workers: int = 4,
+        num_epochs: int = 100,
         **kwargs
     ):
         super().__init__()
@@ -106,6 +107,7 @@ class VICReg(L.LightningModule):
         self.weight_decay = weight_decay
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.num_epochs = num_epochs
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model. Backbone + projection head.
