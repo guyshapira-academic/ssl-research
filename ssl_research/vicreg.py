@@ -69,6 +69,17 @@ class VICReg(L.LightningModule):
 
     Parameters:
         model (nn.Module): The model to train.
+        projector_features (int): Number of features in the projection head.
+            Default: 128.
+        sim_coef (float): Coefficient for the similarity loss. Default: 25.0.
+        std_coef (float): Coefficient for the standard deviation loss.
+            Default: 25.0.
+        cov_coef (float): Coefficient for the covariance loss. Default: 1.0.
+        lr (float): Learning rate. Default: 1e-3.
+        weight_decay (float): Weight decay. Default: 1e-6.
+        batch_size (int): Batch size. Default: 256.
+        num_workers (int): Number of workers for the data loader. Default: 4.
+        num_epochs (int): Number of epochs to train for. Default: 100.
     """
 
     def __init__(
