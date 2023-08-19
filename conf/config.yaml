@@ -1,14 +1,14 @@
 dataset: "stl10"
 model:
   type: "resnet20"
-  dim: 128
+  dim: 64
 training:
-  projector_features: 512
+  projector_features: 256
   sim_coef: 25.0
   std_coef: 25.0
   cov_coef: 1.0
   batch_size: 16
-  learning_rate: 0.0001
+  learning_rate: 0.01
   weight_decay: 0.0
   num_epochs: 100
   num_workers: 4

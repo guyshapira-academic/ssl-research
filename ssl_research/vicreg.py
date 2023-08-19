@@ -106,9 +106,9 @@ class VICReg(L.LightningModule):
             nn.Linear(model.output_dim, projector_features),
             nn.BatchNorm1d(projector_features),
             nn.ReLU(inplace=True),
-            nn.Linear(projector_features, projector_features),
-            nn.BatchNorm1d(projector_features),
-            nn.ReLU(inplace=True),
+            # nn.Linear(projector_features, projector_features),
+            # nn.BatchNorm1d(projector_features),
+            # nn.ReLU(inplace=True),
             nn.Linear(projector_features, projector_features, bias=False),
         )
         self.projector_features = projector_features
