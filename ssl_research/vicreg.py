@@ -120,6 +120,11 @@ class VICReg(L.LightningModule):
         self.num_workers = num_workers
         self.num_epochs = num_epochs
 
+    @property
+    def num_features(self) -> int:
+        """The number of features in the backbone."""
+        return self.model.num_features
+
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model. Backbone + projection head.
 

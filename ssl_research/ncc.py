@@ -1,12 +1,13 @@
 """This module implements the NCC-based metrics for benchmarking SSL.
 """
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 import lightning as L
 import sklearn.metrics as metrics
 import sklearn.neighbors as neighbors
 import torch
 from numpy.typing import NDArray
+from ssl_research.models.cnn import CNN
 from torch import Tensor
 from torch.utils.data import DataLoader
 
@@ -22,6 +23,15 @@ class NCCAccuracyCallback(L.Callback):
 
         self.loader = loader
 
+    @staticmethod
+    def get_features(x: Tensor, model: CNN) -> List[Tensor]:
+        features = list()
+        for y in model.features_forward(x):
+            if len(y.shape) == 4:
+                y = y.mean(dim=[2, 3])
+            features.append(y)
+        return features
+
     def on_validation_epoch_end(self, trainer: L.Trainer, pl_module: L.LightningModule):
         """
         Calculates the NCC accuracy score for the model at the end of each validation
@@ -33,20 +43,43 @@ class NCCAccuracyCallback(L.Callback):
         """
         # Forward pass through the model
         pl_module.eval()
+
         with torch.no_grad():
-            X, y = [], []
+            num_features = pl_module.num_features
+            X = [[] for _ in range(num_features)]
+            y = []
+
             for batch in self.loader:
                 x_batch, y_batch = batch
-                batch_size = x_batch.shape[0]
                 x_batch = x_batch.to(pl_module.device)
                 y.append(y_batch)
-                X.append(pl_module(x_batch).cpu().reshape(batch_size, -1))
-            X = torch.cat(X)
+                features = self.get_features(x_batch, pl_module.model)
+                for i in range(num_features):
+                    X[i].append(features[i])
+
+            X = [torch.cat(x) for x in X]
             y = torch.cat(y)
 
-        # Calculate the NCC accuracy score
-        score = ncc_accuracy(X, y)
-        trainer.logger.log_metrics({"ncc_accuracy": score})
+            for i, x in enumerate(X):
+                x = x.cpu().numpy()
+
+                score = ncc_accuracy(x, y)
+                trainer.logger.log_metrics({f"ncc_accuracy_layer_{i}": score})
+                print(f"ncc_accuracy_layer_{i}: {score}")
+
+            # X, y = [], []
+            # for batch in self.loader:
+            #     x_batch, y_batch = batch
+            #     batch_size = x_batch.shape[0]
+            #     x_batch = x_batch.to(pl_module.device)
+            #     y.append(y_batch)
+            #     X.append(pl_module(x_batch).cpu().reshape(batch_size, -1))
+            # X = torch.cat(X)
+            # y = torch.cat(y)
+
+        # # Calculate the NCC accuracy score
+        # score = ncc_accuracy(X, y)
+        # trainer.logger.log_metrics({"ncc_accuracy": score})
 
 
 def ncc_accuracy(
