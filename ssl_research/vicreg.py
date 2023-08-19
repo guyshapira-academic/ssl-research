@@ -12,7 +12,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torchvision.transforms as T
-from ssl_research.lars import LARS
+
+# from ssl_research.lars import LARS
 from ssl_research.models.cnn import CNN
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -138,7 +139,12 @@ class VICReg(L.LightningModule):
     def configure_optimizers(self):
         """Configure the optimizer."""
         # Should be LARS optimizer, but Adam is used for simplicity
-        optimizer = LARS(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        # optimizer = LARS(self.parameters(), lr=self.lr,
+        # weight_decay=self.weight_decay)
+        optimizer = optim.Adam(
+            self.parameters(), lr=self.lr, weight_decay=self.weight_decay
+        )
+
         # Cosine decay
         scheduler = optim.lr_scheduler.CosineAnnealingLR(
             optimizer, T_max=self.num_epochs
