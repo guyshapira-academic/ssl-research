@@ -69,6 +69,17 @@ class VICReg(L.LightningModule):
 
     Parameters:
         model (nn.Module): The model to train.
+        projector_features (int): Number of features in the projection head.
+            Default: 128.
+        sim_coef (float): Coefficient for the similarity loss. Default: 25.0.
+        std_coef (float): Coefficient for the standard deviation loss.
+            Default: 25.0.
+        cov_coef (float): Coefficient for the covariance loss. Default: 1.0.
+        lr (float): Learning rate. Default: 1e-3.
+        weight_decay (float): Weight decay. Default: 1e-6.
+        batch_size (int): Batch size. Default: 256.
+        num_workers (int): Number of workers for the data loader. Default: 4.
+        num_epochs (int): Number of epochs to train for. Default: 100.
     """
 
     def __init__(
@@ -82,6 +93,7 @@ class VICReg(L.LightningModule):
         weight_decay: float = 1e-6,
         batch_size: int = 256,
         num_workers: int = 4,
+        num_epochs: int = 100,
         **kwargs
     ):
         super().__init__()
@@ -106,6 +118,7 @@ class VICReg(L.LightningModule):
         self.weight_decay = weight_decay
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.num_epochs = num_epochs
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model. Backbone + projection head.

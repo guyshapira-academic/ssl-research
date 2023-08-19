@@ -115,7 +115,7 @@ class CNN(nn.Module):
         self.output_dim = output_dim
 
         self.conv_in = nn.Conv2d(
-            in_channels=3, out_channels=width[0], kernel_size=3, stride=1, padding=1
+            in_channels=3, out_channels=width[0], kernel_size=3, stride=2, padding=1
         )
 
         self.levels = nn.ModuleList()
@@ -156,6 +156,19 @@ class CNN(nn.Module):
         out = self.fc(out)
 
         return out
+
+    def features_forward(self, x: torch.Tensor) -> torch.Tensor:
+        out = self.conv_in(x)
+
+        for level in self.levels:
+            out = level(out)
+            yield out
+
+        out = self.global_pool(out)
+        out = out.view(out.shape[0], -1)
+        out = self.fc(out)
+
+        yield out
 
 
 def resnet20(output_dim: int) -> CNN:

@@ -40,3 +40,21 @@ def test_cnn(
     y = cnn_model(x)
 
     assert y.shape == (7, output_dim)
+
+
+def test_feature_forward() -> None:
+    cnn_model = cnn.CNN(
+        width=(16, 32, 64, 128),
+        depth=(2, 2, 2, 2),
+        skip_connections=False,
+        output_dim=256,
+    )
+
+    x = torch.rand(7, 3, 96, 96)
+
+    y = x
+    for level in cnn_model.features_forward(x):
+        y = level
+        assert isinstance(y, torch.Tensor)
+
+    assert y.shape == (7, 256)
