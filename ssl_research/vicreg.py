@@ -106,9 +106,9 @@ class VICReg(L.LightningModule):
             nn.Linear(model.output_dim, projector_features),
             nn.BatchNorm1d(projector_features),
             nn.ReLU(inplace=True),
-            # nn.Linear(projector_features, projector_features),
-            # nn.BatchNorm1d(projector_features),
-            # nn.ReLU(inplace=True),
+            nn.Linear(projector_features, projector_features),
+            nn.BatchNorm1d(projector_features),
+            nn.ReLU(inplace=True),
             nn.Linear(projector_features, projector_features, bias=False),
         )
         self.projector_features = projector_features
@@ -138,12 +138,10 @@ class VICReg(L.LightningModule):
 
     def configure_optimizers(self):
         """Configure the optimizer."""
-        # Should be LARS optimizer, but Adam is used for simplicity
+        # Should be LARS optimizer, but SGD is used for simplicity
         # optimizer = LARS(self.parameters(), lr=self.lr,
         # weight_decay=self.weight_decay)
-        optimizer = optim.Adam(
-            self.parameters(), lr=self.lr, weight_decay=self.weight_decay
-        )
+        optimizer = optim.SGD(self.parameters(), lr=self.lr, weight_decay=0.9)
 
         # Cosine decay
         scheduler = optim.lr_scheduler.CosineAnnealingLR(
