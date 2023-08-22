@@ -50,17 +50,20 @@ def main(cfg: DictConfig) -> None:
         training_dataset,
         batch_size=cfg.training.batch_size,
         num_workers=cfg.training.num_workers,
+        pin_memory=True,
     )
     validation_loader = DataLoader(
         validation_dataset,
         batch_size=cfg.training.batch_size,
         num_workers=cfg.training.num_workers,
+        pin_memory=True,
     )
 
     validation_ncc_loader = DataLoader(
         validation_ncc_dataset,
         batch_size=cfg.training.batch_size,
         num_workers=cfg.training.num_workers,
+        pin_memory=True,
     )
 
     # Create the model
