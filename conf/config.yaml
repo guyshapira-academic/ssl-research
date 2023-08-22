@@ -7,7 +7,8 @@ training:
   sim_coef: 25.0
   std_coef: 25.0
   cov_coef: 1.0
-  batch_size: 16
+  batch_size: 256
+  optimizer: "lars"
   learning_rate: 0.01
   weight_decay: 0.0
   num_epochs: 100

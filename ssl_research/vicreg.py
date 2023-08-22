@@ -12,8 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torchvision.transforms as T
-
-# from ssl_research.lars import LARS
+from ssl_research.lars import LARS
 from ssl_research.models.cnn import CNN
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -90,12 +89,13 @@ class VICReg(L.LightningModule):
         sim_coef: float = 25.0,
         std_coef: float = 25.0,
         cov_coef: float = 1.0,
+        optimizer_type: str = "lars",
         lr: float = 1e-3,
         weight_decay: float = 1e-6,
         batch_size: int = 256,
         num_workers: int = 4,
         num_epochs: int = 100,
-        **kwargs
+        **kwargs,
     ):
         super().__init__()
 
@@ -115,6 +115,7 @@ class VICReg(L.LightningModule):
         self.sim_coef = sim_coef
         self.std_coef = std_coef
         self.cov_coef = cov_coef
+        self.optimizer_type = optimizer_type
         self.lr = lr
         self.weight_decay = weight_decay
         self.batch_size = batch_size
@@ -141,7 +142,20 @@ class VICReg(L.LightningModule):
         # Should be LARS optimizer, but SGD is used for simplicity
         # optimizer = LARS(self.parameters(), lr=self.lr,
         # weight_decay=self.weight_decay)
-        optimizer = optim.SGD(self.parameters(), lr=self.lr, weight_decay=0.9)
+        # optimizer = optim.SGD(self.parameters(), lr=self.lr, momentum=0.9)
+
+        if self.optimizer_type == "lars":
+            optimizer = LARS(
+                self.parameters(), lr=self.lr, weight_decay=self.weight_decay
+            )
+        elif self.optimizer_type == "sgd":
+            optimizer = optim.SGD(self.parameters(), lr=self.lr, momentum=0.9)
+        elif self.optimizer_type == "adam":
+            optimizer = optim.Adam(
+                self.parameters(), lr=self.lr, weight_decay=self.weight_decay
+            )
+        else:
+            raise ValueError(f"Optimizer type {self.optimizer_type} not supported.")
 
         # Cosine decay
         scheduler = optim.lr_scheduler.CosineAnnealingLR(

@@ -78,6 +78,7 @@ def main(cfg: DictConfig) -> None:
         sim_coef=cfg.training.sim_coef,
         cov_coef=cfg.training.cov_coef,
         std_coef=cfg.training.std_coef,
+        optimizer_type=cfg.training.optimizer_type,
         lr=cfg.training.learning_rate,
         weight_decay=cfg.training.weight_decay,
         num_epochs=cfg.training.num_epochs,
