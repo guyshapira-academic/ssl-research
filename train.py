@@ -57,7 +57,7 @@ def main(cfg: DictConfig) -> None:
     )
 
     validation_ncc_loader = DataLoader(
-        validation_loader,
+        validation_dataset,
         batch_size=cfg.training.batch_size,
         num_workers=cfg.training.num_workers,
         pin_memory=True,
