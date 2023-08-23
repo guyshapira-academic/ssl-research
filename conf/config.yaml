@@ -8,9 +8,9 @@ training:
   std_coef: 25.0
   cov_coef: 1.0
   batch_size: 256
-  optimizer_type: "lars"
-  learning_rate: 0.01
-  weight_decay: 0.0
-  num_epochs: 100
+  optimizer_type: "sgd"
+  learning_rate: 0.002
+  weight_decay: 0.000001
+  num_epochs: 1000
   num_workers: 4
 fast_dev_run: false

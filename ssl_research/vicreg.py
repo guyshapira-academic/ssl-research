@@ -106,7 +106,12 @@ class VICReg(L.LightningModule):
                 self.parameters(), lr=self.lr, weight_decay=self.weight_decay
             )
         elif self.optimizer_type == "sgd":
-            optimizer = optim.SGD(self.parameters(), lr=self.lr, momentum=0.9)
+            optimizer = optim.SGD(
+                self.parameters(),
+                lr=self.lr,
+                momentum=0.9,
+                weight_decay=self.weight_decay,
+            )
         elif self.optimizer_type == "adam":
             optimizer = optim.Adam(
                 self.parameters(), lr=self.lr, weight_decay=self.weight_decay
