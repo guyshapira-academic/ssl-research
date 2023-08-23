@@ -23,14 +23,17 @@ def main(cfg: DictConfig) -> None:
         training_dataset = STL10(
             root=".", split="unlabeled", download=True, transform=T.ToTensor()
         )
+        image_size = 96
     elif cfg.dataset == "cifar10":
         training_dataset = CIFAR10(
             root=".", train=True, download=True, transform=T.ToTensor()
         )
+        image_size = 32
     elif cfg.dataset == "cifar100":
         training_dataset = CIFAR100(
             root=".", train=True, download=True, transform=T.ToTensor()
         )
+        image_size = 32
     else:
         raise ValueError("Unknown dataset")
 
@@ -79,6 +82,7 @@ def main(cfg: DictConfig) -> None:
         lr=cfg.training.learning_rate,
         weight_decay=cfg.training.weight_decay,
         num_epochs=cfg.training.num_epochs,
+        image_size=image_size,
     )
 
     # Create the logger
