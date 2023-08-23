@@ -21,34 +21,31 @@ def main(cfg: DictConfig) -> None:
     # Create the dataset
     if cfg.dataset == "stl10":
         training_dataset = STL10(root=".", split="unlabeled", download=True)
-        training_dataset = VICRegDataset(training_dataset)
+        training_dataset = VICRegDataset(training_dataset, image_size=96)
         validation_ncc_dataset = STL10(
             root=".",
             split="train",
             download=True,
             transform=transforms.ToTensor(),
         )
-        image_size = 96
     elif cfg.dataset == "cifar10":
         training_dataset = CIFAR10(root=".", train=True, download=True)
-        training_dataset = VICRegDataset(training_dataset)
+        training_dataset = VICRegDataset(training_dataset, image_size=32)
         validation_ncc_dataset = CIFAR10(
             root=".",
             train=False,
             download=True,
             transform=transforms.ToTensor(),
         )
-        image_size = 32
     elif cfg.dataset == "cifar100":
         training_dataset = CIFAR100(root=".", train=True, download=True)
-        training_dataset = VICRegDataset(training_dataset)
+        training_dataset = VICRegDataset(training_dataset, image_size=32)
         validation_ncc_dataset = CIFAR100(
             root=".",
             train=False,
             download=True,
             transform=transforms.ToTensor(),
         )
-        image_size = 32
     else:
         raise ValueError("Unknown dataset")
 
@@ -97,7 +94,6 @@ def main(cfg: DictConfig) -> None:
         lr=cfg.training.learning_rate,
         weight_decay=cfg.training.weight_decay,
         num_epochs=cfg.training.num_epochs,
-        image_size=image_size,
     )
 
     # Create the logger

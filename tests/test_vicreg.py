@@ -25,7 +25,7 @@ def dataset_val():
 
 
 def test_vicreg_loop(dataset: Dataset, dataset_val: Dataset):
-    vicreg_dataset = VICRegDataset(dataset)
+    vicreg_dataset = VICRegDataset(dataset, image_size=64)
     loader = DataLoader(vicreg_dataset, batch_size=32)
 
     loader_val = DataLoader(dataset_val, batch_size=32)

@@ -26,13 +26,15 @@ class VICRegDataset(Dataset):
         dataset (Dataset): The dataset to wrap.
     """
 
-    def __init__(self, dataset: Dataset):
+    def __init__(self, dataset: Dataset, image_size: int = 32):
         super().__init__()
 
         self.dataset = dataset
         self.transform = T.Compose(
             [
-                T.RandomResizedCrop(224, interpolation=T.InterpolationMode.BICUBIC),
+                T.RandomResizedCrop(
+                    image_size, interpolation=T.InterpolationMode.BICUBIC
+                ),
                 T.RandomHorizontalFlip(p=0.5),
                 T.RandomApply(
                     [
