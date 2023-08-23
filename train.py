@@ -11,7 +11,7 @@ from ssl_research.models.cnn import resnet20, vanilla20
 from ssl_research.vicreg import VICReg, VICRegDataset
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from torchvision.datasets import CIFAR10, STL10
+from torchvision.datasets import CIFAR10, CIFAR100, STL10
 
 
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
@@ -32,6 +32,15 @@ def main(cfg: DictConfig) -> None:
         training_dataset = CIFAR10(root=".", train=True, download=True)
         training_dataset = VICRegDataset(training_dataset)
         validation_ncc_dataset = CIFAR10(
+            root=".",
+            train=False,
+            download=True,
+            transform=transforms.ToTensor(),
+        )
+    elif cfg.dataset == "cifar100":
+        training_dataset = CIFAR100(root=".", train=True, download=True)
+        training_dataset = VICRegDataset(training_dataset)
+        validation_ncc_dataset = CIFAR100(
             root=".",
             train=False,
             download=True,

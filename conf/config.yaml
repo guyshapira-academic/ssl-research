@@ -1,4 +1,4 @@
-dataset: "stl10"
+dataset: "cifar100"
 model:
   type: "resnet20"
   dim: 64
