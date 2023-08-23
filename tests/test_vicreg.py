@@ -4,14 +4,19 @@ import lightning as L
 import pytest
 from ssl_research import ncc
 from ssl_research.models.cnn import vanilla20
-from ssl_research.vicreg import VICReg, VICRegDataset
+from ssl_research.vicreg import VICReg
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms
 
 
 @pytest.fixture
 def dataset():
-    return datasets.FakeData(size=100, image_size=(3, 64, 64), num_classes=10)
+    return datasets.FakeData(
+        size=100,
+        image_size=(3, 64, 64),
+        num_classes=10,
+        transform=transforms.ToTensor(),
+    )
 
 
 @pytest.fixture
@@ -25,8 +30,8 @@ def dataset_val():
 
 
 def test_vicreg_loop(dataset: Dataset, dataset_val: Dataset):
-    vicreg_dataset = VICRegDataset(dataset)
-    loader = DataLoader(vicreg_dataset, batch_size=32)
+    # vicreg_dataset = VICRegDataset(dataset)
+    loader = DataLoader(dataset, batch_size=32)
 
     loader_val = DataLoader(dataset_val, batch_size=32)
 

@@ -8,9 +8,9 @@ from lightning.pytorch.loggers import WandbLogger
 from omegaconf import DictConfig
 from ssl_research import ncc
 from ssl_research.models.cnn import resnet20, vanilla20
-from ssl_research.vicreg import VICReg, VICRegDataset
+from ssl_research.vicreg import VICReg
 from torch.utils.data import DataLoader
-from torchvision import transforms
+from torchvision import transforms as T
 from torchvision.datasets import CIFAR10, CIFAR100, STL10
 
 
@@ -20,31 +20,16 @@ def main(cfg: DictConfig) -> None:
 
     # Create the dataset
     if cfg.dataset == "stl10":
-        training_dataset = STL10(root=".", split="unlabeled", download=True)
-        training_dataset = VICRegDataset(training_dataset)
-        validation_ncc_dataset = STL10(
-            root=".",
-            split="train",
-            download=True,
-            transform=transforms.ToTensor(),
+        training_dataset = STL10(
+            root=".", split="unlabeled", download=True, transform=T.ToTensor()
         )
     elif cfg.dataset == "cifar10":
-        training_dataset = CIFAR10(root=".", train=True, download=True)
-        training_dataset = VICRegDataset(training_dataset)
-        validation_ncc_dataset = CIFAR10(
-            root=".",
-            train=False,
-            download=True,
-            transform=transforms.ToTensor(),
+        training_dataset = CIFAR10(
+            root=".", train=True, download=True, transform=T.ToTensor()
         )
     elif cfg.dataset == "cifar100":
-        training_dataset = CIFAR100(root=".", train=True, download=True)
-        training_dataset = VICRegDataset(training_dataset)
-        validation_ncc_dataset = CIFAR100(
-            root=".",
-            train=False,
-            download=True,
-            transform=transforms.ToTensor(),
+        training_dataset = CIFAR100(
+            root=".", train=True, download=True, transform=T.ToTensor()
         )
     else:
         raise ValueError("Unknown dataset")
@@ -69,7 +54,7 @@ def main(cfg: DictConfig) -> None:
     )
 
     validation_ncc_loader = DataLoader(
-        validation_ncc_dataset,
+        validation_loader,
         batch_size=cfg.training.batch_size,
         num_workers=cfg.training.num_workers,
         pin_memory=True,
