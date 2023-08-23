@@ -4,7 +4,7 @@ Based on the paper:
     "VICReg: Variance-Invariance-Covariance Regularization for
     Self-Supervised Learning", https://arxiv.org/abs/2105.04906
 """
-from typing import Callable, Tuple
+from typing import Tuple
 
 import lightning as L
 import torch
@@ -15,6 +15,54 @@ import torchvision.transforms as T
 from ssl_research.lars import LARS
 from ssl_research.models.cnn import CNN
 from torch import Tensor
+from torch.utils.data import Dataset
+
+
+class VICRegDataset(Dataset):
+    """
+    Wrapper for a dataset to be used with VICReg.
+
+    Parameters:
+        dataset (Dataset): The dataset to wrap.
+    """
+
+    def __init__(self, dataset: Dataset, image_size: int = 32):
+        super().__init__()
+
+        self.dataset = dataset
+        self.transform = T.Compose(
+            [
+                T.RandomResizedCrop(
+                    image_size, interpolation=T.InterpolationMode.BICUBIC
+                ),
+                T.RandomHorizontalFlip(p=0.5),
+                T.RandomApply(
+                    [
+                        T.ColorJitter(
+                            brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1
+                        )
+                    ],
+                    p=0.8,
+                ),
+                T.RandomApply(
+                    [T.GaussianBlur(kernel_size=23)],
+                    p=0.5,
+                ),
+                T.RandomGrayscale(p=0.2),
+                T.RandomSolarize(threshold=128, p=0.1),
+                T.ToTensor(),
+                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        )
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx: int) -> Tuple[Tensor, Tensor]:
+        x, _ = self.dataset[idx]
+        x1 = self.transform(x)
+        x2 = self.transform(x)
+        return x1, x2
 
 
 class VICReg(L.LightningModule):
@@ -49,12 +97,11 @@ class VICReg(L.LightningModule):
         batch_size: int = 256,
         num_workers: int = 4,
         num_epochs: int = 100,
-        image_size: int = 32,
         **kwargs,
     ):
         super().__init__()
 
-        self.save_hyperparameters(ignore=["model", "image_size"])
+        self.save_hyperparameters(ignore=["model"])
 
         self.model = model
         self.projector = nn.Sequential(
@@ -76,8 +123,6 @@ class VICReg(L.LightningModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.num_epochs = num_epochs
-
-        self.transform = vicreg_transform(image_size)
 
     @property
     def num_features(self) -> int:
@@ -132,10 +177,7 @@ class VICReg(L.LightningModule):
         Parameters:
             batch (Tensor): The batch of data.
         """
-        x, _ = batch
-        x_a = self.transform(x)
-        x_b = self.transform(x)
-
+        x_a, x_b = batch
         y_a = self.forward(x_a)
         y_b = self.forward(x_b)
 
@@ -160,9 +202,7 @@ class VICReg(L.LightningModule):
         Parameters:
             batch (Tensor): The batch of data.
         """
-        x, _ = batch
-        x_a = self.transform(x)
-        x_b = self.transform(x)
+        x_a, x_b = batch
 
         y_a = self.forward(x_a)
         y_b = self.forward(x_b)
@@ -226,26 +266,3 @@ def off_diagonal(x: Tensor):
     n, m = x.shape
     assert n == m
     return x.flatten()[:-1].view(n - 1, n + 1)[:, 1:].flatten()
-
-
-def vicreg_transform(size: int = 32) -> Callable:
-    transform = T.Compose(
-        [
-            T.RandomResizedCrop(
-                size, interpolation=T.InterpolationMode.BICUBIC, antialias=True
-            ),
-            T.RandomHorizontalFlip(p=0.5),
-            T.RandomApply(
-                [T.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1)],
-                p=0.8,
-            ),
-            T.RandomApply(
-                [T.GaussianBlur(kernel_size=23)],
-                p=0.5,
-            ),
-            T.RandomGrayscale(p=0.2),
-            T.RandomSolarize(threshold=0.5, p=0.1),
-            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-    )
-    return transform
