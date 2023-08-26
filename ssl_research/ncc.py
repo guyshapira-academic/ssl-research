@@ -83,8 +83,9 @@ class SSLMetricsCallback(L.Callback):
         """
         for logger in trainer.loggers:
             if isinstance(logger, CSVLogger):
-                for i, score in enumerate(scores):
-                    logger.log_metrics({f"{name}_fold_{i}": score})
+                logger.log_metrics(
+                    {f"{name}_fold_{i}": score for i, score in enumerate(scores)}
+                )
             else:
                 logger.log_metrics({name: statistics.mean(scores)})
 
