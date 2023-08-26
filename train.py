@@ -1,6 +1,8 @@
 """
 This script is used to train the model using the VICReg training loop.
 """
+import os.path
+
 import hydra
 import lightning as L
 import torch.utils.data as tdata
@@ -18,6 +20,8 @@ from torchvision.datasets import CIFAR10, CIFAR100, STL10
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
 def main(cfg: DictConfig) -> None:
     """Main entry point for the training script."""
+
+    hydra_cfg = hydra.core.hydra_config.HydraConfig.get()
 
     # Create the dataset
     if cfg.dataset.name == "stl10":
@@ -102,7 +106,7 @@ def main(cfg: DictConfig) -> None:
     # add your batch size to the wandb config
     wandb_logger.experiment.config["batch_size"] = cfg.training.batch_size
 
-    csv_logger = CSVLogger(save_dir="logs", name="vicreg")
+    csv_logger = CSVLogger(save_dir=hydra_cfg["runtime"]["output_dir"], name="vicreg")
 
     # Create the trainer
     trainer = L.Trainer(
@@ -119,7 +123,7 @@ def main(cfg: DictConfig) -> None:
     trainer.fit(vicreg, train_loader, val_dataloaders=validation_loader)
 
     # Save the model
-    trainer.save_checkpoint("vicreg.ckpt")
+    trainer.save_checkpoint(os.path.join()["runtime"]["output_dir"], "vicreg.ckpt")
 
 
 if __name__ == "__main__":
