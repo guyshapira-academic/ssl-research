@@ -7,7 +7,7 @@ from ssl_research import ncc
 
 
 @pytest.mark.parametrize("tensor_data", [True, False])
-def test_ncc_accuracy(test_data: bool, tensor_data: bool):
+def test_ncc_accuracy(tensor_data: bool):
     X = np.random.randn(100, 10)
     y = np.random.randint(0, 10, 100)
 
@@ -15,6 +15,7 @@ def test_ncc_accuracy(test_data: bool, tensor_data: bool):
         X = torch.from_numpy(X)
         y = torch.from_numpy(y)
 
-    acc = ncc.ncc_accuracy(X, y)
-    assert isinstance(acc, float)
-    assert 0.0 <= acc <= 1.0
+    scores = ncc.ncc_accuracy(X, y)
+    for acc in scores:
+        assert isinstance(acc, float)
+        assert 0.0 <= acc <= 1.0
