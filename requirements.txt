@@ -5,3 +5,4 @@ lightning
 torchvision
 omegaconf
 scikit-learn
+kornia

@@ -6,6 +6,7 @@ Based on the paper:
 """
 from typing import List, Tuple, Union
 
+import kornia.augmentation as K
 import lightning as L
 import torch
 import torch.nn as nn
@@ -125,29 +126,17 @@ class VICReg(L.LightningModule):
         self.num_workers = num_workers
         self.num_epochs = num_epochs
 
-        self.transform = T.Compose(
-            [
-                # T.RandomResizedCrop(
-                #     image_size, interpolation=T.InterpolationMode.BICUBIC
-                # ),
-                T.RandomHorizontalFlip(p=0.5),
-                T.RandomApply(
-                    [
-                        T.ColorJitter(
-                            brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1
-                        )
-                    ],
-                    p=0.8,
-                ),
-                T.RandomApply(
-                    [T.GaussianBlur(kernel_size=23)],
-                    p=0.5,
-                ),
-                T.RandomGrayscale(p=0.2),
-                T.RandomSolarize(threshold=0.5, p=0.1),
-                # T.ToTensor(),
-                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ]
+        self.transform = K.AugmentationSequential(
+            K.RandomResizedCrop(size=(image_size, image_size), scale=(0.08, 1.0)),
+            K.RandomHorizontalFlip(p=0.5),
+            K.ColorJitter(0.4, 0.4, 0.2, 0.1, p=0.8),
+            K.RandomGaussianBlur((23, 23), (0.1, 2.0), p=0.5),
+            K.RandomGrayscale(p=0.2),
+            K.RandomSolarize(0.5, p=0.1),
+            K.Normalize(
+                mean=torch.tensor([0.485, 0.456, 0.406]),
+                std=torch.tensor([0.229, 0.224, 0.225]),
+            ),
         )
 
     @property
