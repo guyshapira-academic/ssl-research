@@ -101,6 +101,7 @@ class CNN(nn.Module):
         depth (tuple): Number of convolutional blocks per spatial resolution.
         skip_connections (bool): Whether to add residual connections.
             Default: False.
+        stem_stride (int): Stride of the first convolutional layer. Default: 1.
     """
 
     def __init__(
@@ -109,6 +110,7 @@ class CNN(nn.Module):
         depth: tuple = (2, 2, 2, 2),
         output_dim: int = 256,
         skip_connections: bool = False,
+        stem_stride: int = 1,
     ):
         super().__init__()
 
@@ -172,29 +174,33 @@ class CNN(nn.Module):
         yield out
 
 
-def resnet20(output_dim: int) -> CNN:
+def resnet20(output_dim: int, stem_stride: int = 1) -> CNN:
     """ResNet-20 model.
 
     Parameters:
         output_dim (int): Dimension of the output vector.
+        stem_stride (int): Stride of the first convolutional layer. Default: 1.
     """
     return CNN(
         width=(16, 32, 64),
         depth=(3, 3, 3),
         output_dim=output_dim,
         skip_connections=True,
+        stem_stride=stem_stride,
     )
 
 
-def vanilla20(output_dim: int) -> CNN:
+def vanilla20(output_dim: int, stem_stride: int = 1) -> CNN:
     """ResNet-20 model.
 
     Parameters:
         output_dim (int): Dimension of the output vector.
+        stem_stride (int): Stride of the first convolutional layer. Default: 1.
     """
     return CNN(
         width=(16, 32, 64),
         depth=(2, 2, 2),
         output_dim=output_dim,
         skip_connections=False,
+        stem_stride=stem_stride,
     )

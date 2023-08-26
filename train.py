@@ -72,10 +72,14 @@ def main(cfg: DictConfig) -> None:
     )
 
     # Create the model
+    if image_size < 64:
+        stem_stride = 1
+    else:
+        stem_stride = 2
     if cfg.model.type == "vanilla20":
-        model = vanilla20(cfg.model.dim)
+        model = vanilla20(cfg.model.dim, stem_stride=stem_stride)
     elif cfg.model.type == "resnet20":
-        model = resnet20(cfg.model.dim)
+        model = resnet20(cfg.model.dim, stem_stride=stem_stride)
     else:
         raise ValueError("Unknown model type")
 
