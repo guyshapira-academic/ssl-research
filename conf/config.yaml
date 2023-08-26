@@ -1,4 +1,6 @@
-dataset: "cifar10"
+dataset:
+  name: "cifar10"
+  image_size: null
 model:
   type: "resnet20"
   dim: 64

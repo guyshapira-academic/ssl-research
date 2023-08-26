@@ -20,7 +20,7 @@ def main(cfg: DictConfig) -> None:
     """Main entry point for the training script."""
 
     # Create the dataset
-    if cfg.dataset == "stl10":
+    if cfg.dataset.name == "stl10":
         training_dataset = STL10(
             root=".", split="unlabeled", download=True, transform=transforms.ToTensor()
         )
@@ -30,23 +30,23 @@ def main(cfg: DictConfig) -> None:
             download=True,
             transform=transforms.ToTensor(),
         )
-        image_size = 96
-    elif cfg.dataset == "cifar10":
+        image_size = cfg.dataset.get("image_size") or 96
+    elif cfg.dataset.name == "cifar10":
         training_dataset = CIFAR10(
             root=".", train=True, download=True, transform=transforms.ToTensor()
         )
         training_dataset, validation_dataset = tdata.random_split(
             training_dataset, [45000, 5000]
         )
-        image_size = 32
-    elif cfg.dataset == "cifar100":
+        image_size = cfg.dataset.get("image_size") or 32
+    elif cfg.dataset.name == "cifar100":
         training_dataset = CIFAR100(
             root=".", train=True, download=True, transform=transforms.ToTensor()
         )
         training_dataset, validation_dataset = tdata.random_split(
             training_dataset, [45000, 5000]
         )
-        image_size = 32
+        image_size = cfg.dataset.get("image_size") or 32
     else:
         raise ValueError("Unknown dataset")
 
