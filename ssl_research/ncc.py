@@ -89,10 +89,13 @@ class SSLMetricsCallback(L.Callback):
         for logger in trainer.loggers:
             if isinstance(logger, CSVLogger):
                 logger.log_metrics(
-                    {f"{name}_fold_{i}": score for i, score in enumerate(scores)}
+                    {f"{name}_fold_{i}": score for i, score in enumerate(scores)},
+                    step=trainer.global_step,
                 )
             else:
-                logger.log_metrics({name: statistics.mean(scores)})
+                logger.log_metrics(
+                    {name: statistics.mean(scores)}, step=trainer.global_step
+                )
 
 
 def ncc_accuracy(
