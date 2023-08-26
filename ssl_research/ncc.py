@@ -12,7 +12,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 
 
-class NCCAccuracyCallback(L.Callback):
+class SSLMetricsCallback(L.Callback):
     """
     This callback calculates the NCC accuracy score for a model at each validation
     epoch, using the validation data.
@@ -66,20 +66,6 @@ class NCCAccuracyCallback(L.Callback):
                 score = ncc_accuracy(x, y)
                 trainer.logger.log_metrics({f"ncc_accuracy_layer_{i}": score})
                 print(f"ncc_accuracy_layer_{i}: {score}")
-
-            # X, y = [], []
-            # for batch in self.loader:
-            #     x_batch, y_batch = batch
-            #     batch_size = x_batch.shape[0]
-            #     x_batch = x_batch.to(pl_module.device)
-            #     y.append(y_batch)
-            #     X.append(pl_module(x_batch).cpu().reshape(batch_size, -1))
-            # X = torch.cat(X)
-            # y = torch.cat(y)
-
-        # # Calculate the NCC accuracy score
-        # score = ncc_accuracy(X, y)
-        # trainer.logger.log_metrics({"ncc_accuracy": score})
 
 
 def ncc_accuracy(

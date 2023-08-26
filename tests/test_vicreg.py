@@ -24,7 +24,7 @@ def test_vicreg_loop(dataset: Dataset):
 
     loader_val = DataLoader(dataset, batch_size=32)
 
-    ncc_callback = ncc.NCCAccuracyCallback(loader_val)
+    ncc_callback = ncc.SSLMetricsCallback(loader_val)
 
     model = vanilla20(32)
     vicreg = VICReg(

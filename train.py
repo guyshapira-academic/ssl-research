@@ -102,7 +102,7 @@ def main(cfg: DictConfig) -> None:
     trainer = L.Trainer(
         fast_dev_run=cfg.fast_dev_run,
         max_epochs=cfg.training.num_epochs,
-        callbacks=[ncc.NCCAccuracyCallback(validation_ncc_loader)],
+        callbacks=[ncc.SSLMetricsCallback(validation_ncc_loader)],
         logger=wandb_logger,
     )
 
