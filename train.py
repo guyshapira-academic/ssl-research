@@ -4,6 +4,7 @@ This script is used to train the model using the VICReg training loop.
 import hydra
 import lightning as L
 import torch.utils.data as tdata
+from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from omegaconf import DictConfig
 from ssl_research import ncc
@@ -103,12 +104,18 @@ def main(cfg: DictConfig) -> None:
     trainer = L.Trainer(
         fast_dev_run=cfg.fast_dev_run,
         max_epochs=cfg.training.num_epochs,
-        callbacks=[ncc.SSLMetricsCallback(validation_ncc_loader)],
+        callbacks=[
+            ncc.SSLMetricsCallback(validation_ncc_loader),
+            ModelCheckpoint(every_n_train_steps=100),
+        ],
         logger=[wandb_logger, csv_logger],
     )
 
     # Train the model
     trainer.fit(vicreg, train_loader, val_dataloaders=validation_loader)
+
+    # Save the model
+    trainer.save_checkpoint("vicreg.ckpt")
 
 
 if __name__ == "__main__":
