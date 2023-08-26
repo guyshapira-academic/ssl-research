@@ -123,7 +123,9 @@ def main(cfg: DictConfig) -> None:
     trainer.fit(vicreg, train_loader, val_dataloaders=validation_loader)
 
     # Save the model
-    trainer.save_checkpoint(os.path.join()["runtime"]["output_dir"], "vicreg.ckpt")
+    trainer.save_checkpoint(
+        os.path.join(hydra_cfg["runtime"]["output_dir"], "vicreg.ckpt")
+    )
 
 
 if __name__ == "__main__":
