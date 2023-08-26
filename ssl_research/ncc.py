@@ -9,6 +9,7 @@ import torch
 from lightning.pytorch.loggers import CSVLogger
 from numpy.typing import NDArray
 from sklearn.model_selection import cross_val_score
+from sklearn.svm import LinearSVC
 from ssl_research.models.cnn import CNN
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -69,6 +70,10 @@ class SSLMetricsCallback(L.Callback):
                 self.log_cv(f"ncc_layer_{i}", scores, trainer)
                 print(f"ncc_layer_{i}: {statistics.mean(scores):.4f}")
 
+                lp_scores = linear_probing_accuracy(x, y)
+                self.log_cv(f"linear_probing_layer_{i}", lp_scores, trainer)
+                print(f"linear_probing_layer_{i}: {statistics.mean(lp_scores):.4f}")
+
     @staticmethod
     def log_cv(name: str, scores: List[float], trainer: L.Trainer):
         """
@@ -107,6 +112,28 @@ def ncc_accuracy(
         y = y.cpu().numpy()
 
     clf = neighbors.NearestCentroid()
+    cross_val_scores = cross_val_score(clf, X, y, cv=5, scoring="accuracy")
+
+    return cross_val_scores
+
+
+def linear_probing_accuracy(
+    X: Union[Tensor, NDArray],
+    y: Union[Tensor, NDArray],
+) -> float:
+    """
+    Computes the linear probing accuracy score using scikit-learn's LinearSVC class.
+
+    Parameters:
+        X (tensor or array): Input vectors
+        y (tensor or array): Input classifications
+    """
+    if isinstance(X, Tensor):
+        X = X.cpu().numpy()
+    if isinstance(y, Tensor):
+        y = y.cpu().numpy()
+
+    clf = LinearSVC(dual="auto")
     cross_val_scores = cross_val_score(clf, X, y, cv=5, scoring="accuracy")
 
     return cross_val_scores
