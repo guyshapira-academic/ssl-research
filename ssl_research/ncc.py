@@ -44,6 +44,9 @@ class SSLMetricsCallback(L.Callback):
             trainer (Trainer): The trainer object
             pl_module (LightningModule): The module being trained
         """
+        if trainer.current_epoch % 20 != 0:
+            return
+
         # Forward pass through the model
         pl_module.eval()
 
