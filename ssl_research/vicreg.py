@@ -4,7 +4,7 @@ Based on the paper:
     "VICReg: Variance-Invariance-Covariance Regularization for
     Self-Supervised Learning", https://arxiv.org/abs/2105.04906
 """
-from typing import Tuple
+from typing import List, Tuple, Union
 
 import lightning as L
 import torch
@@ -97,6 +97,7 @@ class VICReg(L.LightningModule):
         batch_size: int = 256,
         num_workers: int = 4,
         num_epochs: int = 100,
+        image_size: int = 32,
         **kwargs,
     ):
         super().__init__()
@@ -124,6 +125,31 @@ class VICReg(L.LightningModule):
         self.num_workers = num_workers
         self.num_epochs = num_epochs
 
+        self.transform = T.Compose(
+            [
+                # T.RandomResizedCrop(
+                #     image_size, interpolation=T.InterpolationMode.BICUBIC
+                # ),
+                T.RandomHorizontalFlip(p=0.5),
+                T.RandomApply(
+                    [
+                        T.ColorJitter(
+                            brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1
+                        )
+                    ],
+                    p=0.8,
+                ),
+                T.RandomApply(
+                    [T.GaussianBlur(kernel_size=23)],
+                    p=0.5,
+                ),
+                T.RandomGrayscale(p=0.2),
+                T.RandomSolarize(threshold=0.5, p=0.1),
+                # T.ToTensor(),
+                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        )
+
     @property
     def num_features(self) -> int:
         """The number of features in the backbone."""
@@ -141,11 +167,6 @@ class VICReg(L.LightningModule):
 
     def configure_optimizers(self):
         """Configure the optimizer."""
-        # Should be LARS optimizer, but SGD is used for simplicity
-        # optimizer = LARS(self.parameters(), lr=self.lr,
-        # weight_decay=self.weight_decay)
-        # optimizer = optim.SGD(self.parameters(), lr=self.lr, momentum=0.9)
-
         if self.optimizer_type == "lars":
             optimizer = LARS(
                 self.parameters(), lr=self.lr, weight_decay=self.weight_decay
@@ -177,7 +198,11 @@ class VICReg(L.LightningModule):
         Parameters:
             batch (Tensor): The batch of data.
         """
-        x_a, x_b = batch
+        x = VICReg.extract_x(batch)
+
+        x_a = self.transform(x)
+        x_b = self.transform(x)
+
         y_a = self.forward(x_a)
         y_b = self.forward(x_b)
 
@@ -202,7 +227,10 @@ class VICReg(L.LightningModule):
         Parameters:
             batch (Tensor): The batch of data.
         """
-        x_a, x_b = batch
+        x = VICReg.extract_x(batch)
+
+        x_a = self.transform(x)
+        x_b = self.transform(x)
 
         y_a = self.forward(x_a)
         y_b = self.forward(x_b)
@@ -220,6 +248,14 @@ class VICReg(L.LightningModule):
         self.log("val/loss", loss, prog_bar=True)
 
         return loss
+
+    @staticmethod
+    def extract_x(batch: Union[Tuple, List, Tensor]) -> Tensor:
+        if isinstance(batch, list) or isinstance(batch, tuple):
+            x, _ = batch
+        else:
+            x = batch
+        return x
 
 
 def vicreg_loss(

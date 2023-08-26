@@ -116,7 +116,7 @@ class CNN(nn.Module):
         self.num_features = len(width)
 
         self.conv_in = nn.Conv2d(
-            in_channels=3, out_channels=width[0], kernel_size=3, stride=2, padding=1
+            in_channels=3, out_channels=width[0], kernel_size=3, stride=1, padding=1
         )
 
         self.levels = nn.ModuleList()

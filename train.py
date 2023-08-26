@@ -8,7 +8,7 @@ from lightning.pytorch.loggers import WandbLogger
 from omegaconf import DictConfig
 from ssl_research import ncc
 from ssl_research.models.cnn import resnet20, vanilla20
-from ssl_research.vicreg import VICReg, VICRegDataset
+from ssl_research.vicreg import VICReg
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import CIFAR10, CIFAR100, STL10
@@ -20,46 +20,41 @@ def main(cfg: DictConfig) -> None:
 
     # Create the dataset
     if cfg.dataset == "stl10":
-        training_dataset = STL10(root=".", split="unlabeled", download=True)
-        training_dataset = VICRegDataset(training_dataset, image_size=96)
-        validation_ncc_dataset = STL10(
+        training_dataset = STL10(
+            root=".", split="unlabeled", download=True, transform=transforms.ToTensor()
+        )
+        validation_dataset = STL10(
             root=".",
             split="train",
             download=True,
             transform=transforms.ToTensor(),
         )
+        image_size = 96
     elif cfg.dataset == "cifar10":
-        training_dataset = CIFAR10(root=".", train=True, download=True)
-        training_dataset = VICRegDataset(training_dataset, image_size=32)
-        validation_ncc_dataset = CIFAR10(
-            root=".",
-            train=False,
-            download=True,
-            transform=transforms.ToTensor(),
+        training_dataset = CIFAR10(
+            root=".", train=True, download=True, transform=transforms.ToTensor()
         )
+        training_dataset, validation_dataset = tdata.random_split(
+            training_dataset, [45000, 5000]
+        )
+        image_size = 32
     elif cfg.dataset == "cifar100":
-        training_dataset = CIFAR100(root=".", train=True, download=True)
-        training_dataset = VICRegDataset(training_dataset, image_size=32)
-        validation_ncc_dataset = CIFAR100(
-            root=".",
-            train=False,
-            download=True,
-            transform=transforms.ToTensor(),
+        training_dataset = CIFAR100(
+            root=".", train=True, download=True, transform=transforms.ToTensor()
         )
+        training_dataset, validation_dataset = tdata.random_split(
+            training_dataset, [45000, 5000]
+        )
+        image_size = 32
     else:
         raise ValueError("Unknown dataset")
 
-    # split the training_dataset into train and validation
-    train_length = int(len(training_dataset) * 0.8)
-    validation_length = len(training_dataset) - train_length
-    training_dataset, validation_dataset = tdata.random_split(
-        training_dataset, [train_length, validation_length]
-    )
     train_loader = DataLoader(
         training_dataset,
         batch_size=cfg.training.batch_size,
         num_workers=cfg.training.num_workers,
         pin_memory=True,
+        shuffle=True,
     )
     validation_loader = DataLoader(
         validation_dataset,
@@ -69,7 +64,7 @@ def main(cfg: DictConfig) -> None:
     )
 
     validation_ncc_loader = DataLoader(
-        validation_ncc_dataset,
+        validation_dataset,
         batch_size=cfg.training.batch_size,
         num_workers=cfg.training.num_workers,
         pin_memory=True,
@@ -94,6 +89,7 @@ def main(cfg: DictConfig) -> None:
         lr=cfg.training.learning_rate,
         weight_decay=cfg.training.weight_decay,
         num_epochs=cfg.training.num_epochs,
+        image_size=image_size,
     )
 
     # Create the logger
