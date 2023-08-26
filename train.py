@@ -4,7 +4,7 @@ This script is used to train the model using the VICReg training loop.
 import hydra
 import lightning as L
 import torch.utils.data as tdata
-from lightning.pytorch.loggers import WandbLogger
+from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from omegaconf import DictConfig
 from ssl_research import ncc
 from ssl_research.models.cnn import resnet20, vanilla20
@@ -94,16 +94,17 @@ def main(cfg: DictConfig) -> None:
 
     # Create the logger
     wandb_logger = WandbLogger(project="SSL Research")
-
     # add your batch size to the wandb config
     wandb_logger.experiment.config["batch_size"] = cfg.training.batch_size
+
+    csv_logger = CSVLogger(save_dir="logs", name="vicreg")
 
     # Create the trainer
     trainer = L.Trainer(
         fast_dev_run=cfg.fast_dev_run,
         max_epochs=cfg.training.num_epochs,
         callbacks=[ncc.SSLMetricsCallback(validation_ncc_loader)],
-        logger=wandb_logger,
+        logger=[wandb_logger, csv_logger],
     )
 
     # Train the model

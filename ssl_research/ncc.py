@@ -1,12 +1,14 @@
 """This module implements the NCC-based metrics for benchmarking SSL.
 """
-from typing import List, Optional, Union
+import statistics
+from typing import List, Union
 
 import lightning as L
-import sklearn.metrics as metrics
 import sklearn.neighbors as neighbors
 import torch
+from lightning.pytorch.loggers import CSVLogger
 from numpy.typing import NDArray
+from sklearn.model_selection import cross_val_score
 from ssl_research.models.cnn import CNN
 from torch import Tensor
 from torch.utils.data import DataLoader
@@ -63,45 +65,47 @@ class SSLMetricsCallback(L.Callback):
             for i, x in enumerate(X):
                 x = x.cpu().numpy()
 
-                score = ncc_accuracy(x, y)
-                trainer.logger.log_metrics({f"ncc_accuracy_layer_{i}": score})
-                print(f"ncc_accuracy_layer_{i}: {score}")
+                scores = ncc_accuracy(x, y)
+                self.log_cv(f"ncc_layer_{i}", scores, trainer)
+                print(f"ncc_layer_{i}: {statistics.mean(scores):.4f}")
+
+    @staticmethod
+    def log_cv(name: str, scores: List[float], trainer: L.Trainer):
+        """
+        Logs the cross validation scores to the loggers
+        For CSV loggers, logs all scores as separate columns,
+        For other loggers, logs the mean of the scores.
+
+        Parameters:
+            name (str): The name of the metric
+            scores (list): The list of scores
+            trainer (Trainer): The trainer object
+        """
+        for logger in trainer.loggers:
+            if isinstance(logger, CSVLogger):
+                for i, score in enumerate(scores):
+                    logger.log_metrics({f"{name}_fold_{i}": score})
+            else:
+                logger.log_metrics({name: statistics.mean(scores)})
 
 
 def ncc_accuracy(
-    X_train: Union[Tensor, NDArray],
-    y_train: Union[Tensor, NDArray],
-    X_test: Optional[Union[Tensor, NDArray]] = None,
-    y_test: Optional[Union[Tensor, NDArray]] = None,
+    X: Union[Tensor, NDArray],
+    y: Union[Tensor, NDArray],
 ) -> float:
     """
     Computes the NCC accuracy score using scikit-learn's NearestCentroid class.
 
     Parameters:
-        X_train (tensor or array): Input vector used to train the
-            NearestCentroid classifier
-        y_train (tensor or array): Input classifications used to train the
-            NearestCentroid classifier
-        X_test (tensor or array) Input vectors for calculating the accuracy.
-            If None, the training data is used.
-        y_test (tensor or array): Inputs classifications calculating the accuracy.
-            If None, the training data is used.
+        X (tensor or array): Input vectors
+        y (tensor or array): Input classifications
     """
-    if isinstance(X_train, Tensor):
-        X_train = X_train.cpu().numpy()
-    if isinstance(y_train, Tensor):
-        y_train = y_train.cpu().numpy()
-    if isinstance(X_test, Tensor):
-        X_test = X_test.cpu().numpy()
-    if isinstance(y_test, Tensor):
-        y_test = y_test.cpu().numpy()
+    if isinstance(X, Tensor):
+        X = X.cpu().numpy()
+    if isinstance(y, Tensor):
+        y = y.cpu().numpy()
 
     clf = neighbors.NearestCentroid()
-    clf.fit(X_train, y_train)
+    cross_val_scores = cross_val_score(clf, X, y, cv=5, scoring="accuracy")
 
-    if X_test is None or y_test is None:
-        y_hat = clf.predict(X_train)
-        return metrics.accuracy_score(y_train, y_hat)
-    else:
-        y_hat = clf.predict(X_test)
-        return metrics.accuracy_score(y_test, y_hat)
+    return cross_val_scores
