@@ -1,9 +1,11 @@
 dataset:
-  name: "stl10"
+  name: "cifar100"
   image_size: 32
 model:
-  type: "resnet20"
+  type: "vanilla"
   dim: 128
+  width_factor: 1
+  depth_factor: 1
 training:
   projector_features: 512
   sim_coef: 25.0
