@@ -3,7 +3,7 @@
 import lightning as L
 import pytest
 from ssl_research import ncc
-from ssl_research.models.cnn import vanilla20
+from ssl_research.models.cnn import vanilla
 from ssl_research.vicreg import VICReg
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms
@@ -26,7 +26,7 @@ def test_vicreg_loop(dataset: Dataset):
 
     ncc_callback = ncc.SSLMetricsCallback(loader_val)
 
-    model = vanilla20(32)
+    model = vanilla(32)
     vicreg = VICReg(
         model,
         projector_features=64,
