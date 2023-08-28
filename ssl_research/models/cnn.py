@@ -174,32 +174,59 @@ class CNN(nn.Module):
         yield out
 
 
-def resnet20(output_dim: int, stem_stride: int = 1) -> CNN:
-    """ResNet-20 model.
+def resnet(
+    output_dim: int, stem_stride: int = 1, width_factor: int = 1, depth_factor: int = 1
+) -> CNN:
+    """ResNet model.
 
     Parameters:
         output_dim (int): Dimension of the output vector.
         stem_stride (int): Stride of the first convolutional layer. Default: 1.
+        width_factor (int): Width scaling factor of the model, with respect to the
+            original ResNet-20. Default: 1.
+        depth_factor (int): Depth scaling factor of the model, with respect to the
+            original ResNet-20. Default: 1.
     """
+    base_width = (16, 32, 64)
+    base_depth = (3, 3, 3)
+
+    width = tuple([int(w * width_factor) for w in base_width])
+    depth = tuple([int(d * depth_factor) for d in base_depth])
+
     return CNN(
-        width=(16, 32, 64),
-        depth=(3, 3, 3),
+        width=width,
+        depth=depth,
         output_dim=output_dim,
         skip_connections=True,
         stem_stride=stem_stride,
     )
 
 
-def vanilla20(output_dim: int, stem_stride: int = 1) -> CNN:
-    """ResNet-20 model.
+def vanilla(
+    output_dim: int,
+    stem_stride: int = 1,
+    width_factor: float = 1,
+    depth_factor: float = 1,
+) -> CNN:
+    """Vanilla CNN model.
 
     Parameters:
         output_dim (int): Dimension of the output vector.
         stem_stride (int): Stride of the first convolutional layer. Default: 1.
+        width_factor (int): Width scaling factor of the model, with respect to the
+            original Vanilla-20. Default: 1.
+        depth_factor (int): Depth scaling factor of the model, with respect to the
+            original Vanilla-20. Default: 1.
     """
+    base_width = (16, 32, 64)
+    base_depth = (3, 3, 3)
+
+    width = tuple([int(w * width_factor) for w in base_width])
+    depth = tuple([int(d * depth_factor) for d in base_depth])
+
     return CNN(
-        width=(16, 32, 64),
-        depth=(2, 2, 2),
+        width=width,
+        depth=depth,
         output_dim=output_dim,
         skip_connections=False,
         stem_stride=stem_stride,

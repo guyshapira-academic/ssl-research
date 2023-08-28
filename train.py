@@ -10,7 +10,7 @@ from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from omegaconf import DictConfig
 from ssl_research import ncc
-from ssl_research.models.cnn import resnet20, vanilla20
+from ssl_research.models.cnn import resnet, vanilla
 from ssl_research.vicreg import VICReg
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -80,10 +80,20 @@ def main(cfg: DictConfig) -> None:
         stem_stride = 1
     else:
         stem_stride = 2
-    if cfg.model.type == "vanilla20":
-        model = vanilla20(cfg.model.dim, stem_stride=stem_stride)
-    elif cfg.model.type == "resnet20":
-        model = resnet20(cfg.model.dim, stem_stride=stem_stride)
+    if cfg.model.type == "vanilla":
+        model = vanilla(
+            cfg.model.dim,
+            stem_stride=stem_stride,
+            width_factor=cfg.model.width_factor,
+            depth_factor=cfg.model.depth_factor,
+        )
+    elif cfg.model.type == "resnet":
+        model = resnet(
+            cfg.model.dim,
+            stem_stride=stem_stride,
+            width_factor=cfg.model.width_factor,
+            depth_factor=cfg.model.depth_factor,
+        )
     else:
         raise ValueError("Unknown model type")
 
