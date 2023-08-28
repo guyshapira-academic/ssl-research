@@ -124,7 +124,11 @@ def main(cfg: DictConfig) -> None:
         max_epochs=cfg.training.num_epochs,
         callbacks=[
             ncc.SSLMetricsCallback(validation_ncc_loader),
-            ModelCheckpoint(every_n_train_steps=100),
+            ModelCheckpoint(
+                every_n_train_steps=100,
+                dirpath=os.path.join(hydra_cfg["runtime"]["output_dir"], "checkpoints"),
+                filename="vicreg-{epoch:02d}",
+            ),
         ],
         logger=[wandb_logger, csv_logger],
     )
