@@ -149,13 +149,23 @@ def main(cfg: DictConfig) -> None:
         ],
         logger=[wandb_logger, csv_logger],
     )
+    os.makedirs(
+        os.path.join(hydra_cfg["runtime"]["output_dir"], "checkpoints"), exist_ok=True
+    )
+    trainer.save_checkpoint(
+        os.path.join(
+            hydra_cfg["runtime"]["output_dir"], "checkpoints", f"{run_name}-init.ckpt"
+        )
+    )
 
     # Train the model
     trainer.fit(vicreg, train_loader, val_dataloaders=validation_loader)
 
     # Save the model
     trainer.save_checkpoint(
-        os.path.join(hydra_cfg["runtime"]["output_dir"], "vicreg.ckpt")
+        os.path.join(
+            hydra_cfg["runtime"]["output_dir"], "checkpoints", f"{run_name}-final.ckpt"
+        )
     )
     wandb.finish()
 
