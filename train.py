@@ -6,7 +6,9 @@ import re
 
 import hydra
 import lightning as L
+import omegaconf
 import torch.utils.data as tdata
+import wandb
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from omegaconf import DictConfig
@@ -23,6 +25,18 @@ def main(cfg: DictConfig) -> None:
     """Main entry point for the training script."""
 
     hydra_cfg = hydra.core.hydra_config.HydraConfig.get()
+
+    run_name = f"{cfg.model.type}_w{cfg.model.width_factor}_d{cfg.model.depth_factor}"
+    run_name = re.sub(r"\.", "-", run_name)
+
+    wandb.config = omegaconf.OmegaConf.to_container(
+        cfg, resolve=True, throw_on_missing=True
+    )
+    wandb.init(
+        name=run_name,
+        project="SSL Research",
+        settings=wandb.Settings(start_method="thread"),
+    )
 
     # Create the dataset
     if cfg.dataset.name == "stl10":
@@ -113,10 +127,8 @@ def main(cfg: DictConfig) -> None:
     )
 
     # Create the logger
-    run_name = f"{cfg.model.type}_w{cfg.wifdth_factor}_d{cfg.depth_factor}"
-    run_name = re.sub(r"\.", "-", run_name)
 
-    wandb_logger = WandbLogger(name=run_name, project="SSL Research", log_model="all")
+    wandb_logger = WandbLogger(project="SSL Research", log_model="all")
     # add your batch size to the wandb config
     wandb_logger.experiment.config["batch_size"] = cfg.training.batch_size
 
@@ -145,6 +157,7 @@ def main(cfg: DictConfig) -> None:
     trainer.save_checkpoint(
         os.path.join(hydra_cfg["runtime"]["output_dir"], "vicreg.ckpt")
     )
+    wandb.finish()
 
 
 if __name__ == "__main__":
