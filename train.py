@@ -141,7 +141,7 @@ def main(cfg: DictConfig) -> None:
         callbacks=[
             ncc.SSLMetricsCallback(validation_ncc_loader),
             ModelCheckpoint(
-                every_n_train_steps=100,
+                every_n_epochs=100,
                 dirpath=os.path.join(hydra_cfg["runtime"]["output_dir"], "checkpoints"),
                 filename="vicreg-{epoch:02d}",
             ),
