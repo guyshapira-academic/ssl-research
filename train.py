@@ -2,11 +2,12 @@
 This script is used to train the model using the VICReg training loop.
 """
 import os.path
+import re
 
 import hydra
 import lightning as L
 import torch.utils.data as tdata
-from lightning.pytorch.callbacks import ModelCheckpoint
+from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from omegaconf import DictConfig
 from ssl_research import ncc
@@ -112,7 +113,10 @@ def main(cfg: DictConfig) -> None:
     )
 
     # Create the logger
-    wandb_logger = WandbLogger(project="SSL Research")
+    run_name = f"{cfg.model.type}_w{cfg.wifdth_factor}_d{cfg.depth_factor}"
+    run_name = re.sub(r"\.", "-", run_name)
+
+    wandb_logger = WandbLogger(name=run_name, project="SSL Research", log_model="all")
     # add your batch size to the wandb config
     wandb_logger.experiment.config["batch_size"] = cfg.training.batch_size
 
@@ -129,6 +133,7 @@ def main(cfg: DictConfig) -> None:
                 dirpath=os.path.join(hydra_cfg["runtime"]["output_dir"], "checkpoints"),
                 filename="vicreg-{epoch:02d}",
             ),
+            LearningRateMonitor(logging_interval="epoch"),
         ],
         logger=[wandb_logger, csv_logger],
     )
