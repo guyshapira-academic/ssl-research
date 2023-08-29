@@ -152,11 +152,6 @@ def main(cfg: DictConfig) -> None:
     os.makedirs(
         os.path.join(hydra_cfg["runtime"]["output_dir"], "checkpoints"), exist_ok=True
     )
-    trainer.save_checkpoint(
-        os.path.join(
-            hydra_cfg["runtime"]["output_dir"], "checkpoints", f"{run_name}-init.ckpt"
-        )
-    )
 
     # Train the model
     trainer.fit(vicreg, train_loader, val_dataloaders=validation_loader)

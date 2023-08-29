@@ -1,8 +1,10 @@
 """This module implements the NCC-based metrics for benchmarking SSL.
 """
+import os.path
 import statistics
 from typing import List, Union
 
+import hydra
 import lightning as L
 import sklearn.neighbors as neighbors
 import torch
@@ -99,6 +101,10 @@ class SSLMetricsCallback(L.Callback):
                 logger.log_metrics(
                     {name: statistics.mean(scores)}, step=trainer.global_step
                 )
+
+    def on_fit_start(self, trainer: L.Trainer, pl_module: L.LightningModule) -> None:
+        hydra_dir = hydra.core.hydra_config.HydraConfig.get()["runtime"]["output_dir"]
+        trainer.save_checkpoint(os.path.join(hydra_dir, "checkpoints", "init.ckpt"))
 
 
 def ncc_accuracy(
