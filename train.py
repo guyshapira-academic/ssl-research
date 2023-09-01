@@ -7,6 +7,7 @@ import re
 import hydra
 import lightning as L
 import omegaconf
+import torch
 import torch.utils.data as tdata
 import wandb
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
@@ -23,7 +24,7 @@ from torchvision.datasets import CIFAR10, CIFAR100, STL10
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
 def main(cfg: DictConfig) -> None:
     """Main entry point for the training script."""
-
+    torch.set_float32_matmul_precision("medium")
     hydra_cfg = hydra.core.hydra_config.HydraConfig.get()
 
     run_name = f"{cfg.model.type}_w{cfg.model.width_factor}_d{cfg.model.depth_factor}"
