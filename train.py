@@ -24,6 +24,7 @@ from torchvision.datasets import CIFAR10, CIFAR100, STL10
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
 def main(cfg: DictConfig) -> None:
     """Main entry point for the training script."""
+
     torch.set_float32_matmul_precision("medium")
     hydra_cfg = hydra.core.hydra_config.HydraConfig.get()
 
@@ -33,11 +34,24 @@ def main(cfg: DictConfig) -> None:
     wandb.config = omegaconf.OmegaConf.to_container(
         cfg, resolve=True, throw_on_missing=True
     )
-    wandb.init(
-        name=run_name,
-        project="SSL Research",
-        settings=wandb.Settings(start_method="thread"),
-    )
+    if cfg.get("run_id") is not None:
+        wandb.init(
+            name=run_name,
+            project="SSL Research",
+            settings=wandb.Settings(start_method="thread"),
+            id=cfg.run_id,
+            resume="must",
+        )
+        # Download checkpoint
+        artifact = wandb.run.use_artifact(cfg.run_id + ":latest")
+        checkpoint_path = artifact.download(hydra_cfg["runtime"]["output_dir"])
+    else:
+        wandb.init(
+            name=run_name,
+            project="SSL Research",
+            settings=wandb.Settings(start_method="thread"),
+        )
+        checkpoint_path = None
 
     # Create the dataset
     if cfg.dataset.name == "stl10":
@@ -155,7 +169,12 @@ def main(cfg: DictConfig) -> None:
     )
 
     # Train the model
-    trainer.fit(vicreg, train_loader, val_dataloaders=validation_loader)
+    trainer.fit(
+        vicreg,
+        train_loader,
+        val_dataloaders=validation_loader,
+        ckpt_path=checkpoint_path,
+    )
 
     # Save the model
     trainer.save_checkpoint(
