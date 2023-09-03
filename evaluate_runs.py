@@ -206,22 +206,36 @@ def main():
     api = wandb.Api()
 
     runs = api.runs("guyshapira-academic/SSL Research")
-    checkpoints = dict()
+    checkpoints = list()
     os.makedirs("checkpoints", exist_ok=True)
     # Download latest checkpoint from WandB
     for r in runs:
         rname = r.name
         architecture_type, width, depth = parse_run_name(rname)
         for artifact in r.logged_artifacts():
-            if artifact.metadata.get("original_filename") == "vicreg-epoch=999.ckpt":
-                if f"{rname}.ckpt" in os.listdir("checkpoints"):
-                    checkpoints[rname] = os.path.join("checkpoints", f"{rname}.ckpt")
+            m = re.match(
+                r"vicreg-epoch=(\d+).ckpt",
+                str(artifact.metadata.get("original_filename")),
+            )
+            if m is not None:
+                epoch = int(m.group(1))
+                checkpoint_dict = dict()
+                checkpoint_dict["run_name"] = rname
+                checkpoint_dict["epoch"] = epoch
+                if f"{rname}_epoch={epoch}.ckpt" in os.listdir("checkpoints"):
+                    checkpoint_dict["path"] = os.path.join(
+                        "checkpoints", f"{rname}_epoch={epoch}.ckpt"
+                    )
                     continue
                 artifact.download(root="checkpoints")
                 os.rename(
                     os.path.join("checkpoints", "model.ckpt"),
-                    os.path.join("checkpoints", f"{rname}.ckpt"),
+                    os.path.join("checkpoints", f"{rname}_epoch={epoch}.ckpt"),
                 )
+                checkpoint_dict["path"] = os.path.join(
+                    "checkpoints", f"{rname}_epoch={epoch}.ckpt"
+                )
+                checkpoints.append(checkpoint_dict)
 
     # Get cifar100 test dataset and loader
     cifar100_test = torchvision.datasets.CIFAR100(
@@ -235,26 +249,34 @@ def main():
     )
 
     score_dicts = list()
-    for run_name, checkpoint_path in tqdm(checkpoints.items()):
+    initial_scores = dict()
+    for checkpoint in tqdm(checkpoints):
+        checkpoint_path = checkpoint["path"]
+        run_name = checkpoint["run_name"]
+        epoch = checkpoint["epoch"]
         architecture_type, width, depth = parse_run_name(run_name)
-        init_model = model_from_checkpoint(checkpoint_path, use_checkpoint=False)
-        init_model.cuda()
-        init_scores = evaluate_model(init_model, cifar100_test_loader)
-        init_scores_tmp = dict()
-        for k, v in init_scores.items():
-            init_scores_tmp[f"init_{k}"] = v
-        init_scores = init_scores_tmp
+        if initial_scores.get(run_name) is None:
+            init_model = model_from_checkpoint(checkpoint_path, use_checkpoint=False)
+            init_model.cuda()
+            init_scores = evaluate_model(init_model, cifar100_test_loader)
+            init_scores["run_name"] = run_name
+            init_scores["architecture_type"] = architecture_type
+            init_scores["width"] = width
+            init_scores["depth"] = depth
+            init_scores["num_parameters"] = count_parameters(init_model)
+            init_scores["epoch"] = 0
+            initial_scores[run_name] = init_scores
         model = model_from_checkpoint(checkpoint_path)
         model.cuda()
         scores = evaluate_model(model, cifar100_test_loader)
-        scores.update(init_scores)
         scores["run_name"] = run_name
         scores["architecture_type"] = architecture_type
         scores["width"] = width
         scores["depth"] = depth
         scores["num_parameters"] = count_parameters(model)
+        scores["epoch"] = epoch
         score_dicts.append(scores)
-    df = pd.DataFrame(score_dicts)
+    df = pd.DataFrame([*score_dicts, *list(initial_scores)])
     df.to_csv("scores.csv", index=False)
 
 
