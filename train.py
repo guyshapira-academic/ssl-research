@@ -43,7 +43,7 @@ def main(cfg: DictConfig) -> None:
             resume="must",
         )
         # Download checkpoint
-        artifact = wandb.run.use_artifact(cfg.run_id + ":latest")
+        artifact = wandb.run.use_artifact(f"model-{cfg.run_id}:latest")
         checkpoint_path = artifact.download(hydra_cfg["runtime"]["output_dir"])
     else:
         wandb.init(
