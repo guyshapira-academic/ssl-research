@@ -219,6 +219,8 @@ def main():
             )
             if m is not None:
                 epoch = int(m.group(1))
+                if epoch not in [99, 199, 499, 999]:
+                    continue
                 checkpoint_dict = dict()
                 checkpoint_dict["run_name"] = rname
                 checkpoint_dict["epoch"] = epoch
@@ -226,6 +228,7 @@ def main():
                     checkpoint_dict["path"] = os.path.join(
                         "checkpoints", f"{rname}_epoch={epoch}.ckpt"
                     )
+                    checkpoints.append(checkpoint_dict)
                     continue
                 artifact.download(root="checkpoints")
                 os.rename(
@@ -276,7 +279,7 @@ def main():
         scores["num_parameters"] = count_parameters(model)
         scores["epoch"] = epoch
         score_dicts.append(scores)
-    df = pd.DataFrame([*score_dicts, *list(initial_scores)])
+    df = pd.DataFrame([*score_dicts, *list(initial_scores.values())])
     df.to_csv("scores.csv", index=False)
 
 
