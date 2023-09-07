@@ -1,0 +1,8 @@
+numpy
+pytest
+torch
+lightning
+torchvision
+omegaconf
+scikit-learn
+kornia
